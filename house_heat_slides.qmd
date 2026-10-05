@@ -1,0 +1,194 @@
+---
+title: "**The HEAT Study in its final year**" 
+subtitle: "Learning more about building science than I would've ever thought😅"
+author: Joe Simeone ([Theme by Grant McDermott](https://github.com/grantmcdermott/quarto-revealjs-clean))
+format: 
+    revealjs:
+        theme: clean.scss
+        slideNumber: true
+---
+
+
+```{r}
+#| include: false
+
+library(duckdb)
+library(tidyverse)
+library(ggtext)
+library(tinytable)
+library(glue)
+library(reactable)
+library(htmltools)
+library(arrow)
+library(scales)
+
+# con <- dbConnect(duckdb(), 'C:/git/nrel_stuff/data/nrel.duckdb', read_only = TRUE)
+# nrel_new_con <- dbConnect(duckdb(), 'C:/git/nrel_stuff/granular_workflows/data/nrel_upg_32.duckdb', read_only = TRUE)
+
+
+# dbListTables(con)
+# dbGetQuery(con, "SHOW TABLES") # shows tables in current schema
+# dbGetQuery(con, "SELECT * FROM information_schema.tables")
+
+
+#source('helper_scripts/make_indoor_temp_graphs.R')
+source('helper_scripts/make_building_char_table.R')
+source('helper_scripts/01_hi_plot_helpers.R')
+source('helper_scripts/make_mixed_humid_hi_plot.R')
+source('helper_scripts/make_philly_hi_plot.R')
+
+
+tsp_theme <-
+  theme_gray(base_size = 16) +   # <-- add this as a base
+theme(
+    panel.background = element_rect(fill = "transparent", colour = NA),
+    plot.background = element_rect(fill = "transparent", colour = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.background = element_rect(fill = "transparent"),
+    legend.key = element_rect(fill = "transparent"),
+    legend.position = 'none',
+     strip.background = element_rect(fill = "transparent", color = NA),
+     strip.text = element_markdown(),
+     plot.title = element_markdown(size = 12, hjust = .5),
+     plot.subtitle = element_markdown(size = 12, hjust = .5),
+     plot.caption = element_text(size = 12)
+  )
+
+```
+
+## Outline
+
+::: {.incremental}
+1. Brief HEAT Study refresher
+2. NLR ResStock data source
+3. Goals for the year  
+:::
+
+
+## Heat Study Refresher {.smaller}
+
+:::: {.columns}
+::: {.column width="50%"}
+::: {.incremental}
+- The **HEAT Study** is an NIH R01 awarded to PI Leah Schniasi to study associations between outdoor and indoor temperature and mortality in the United States.
+- **Aim 1:** *Quantify and compare associations of seasonal **indoor** and outdoor temperatures with **all cause**, **cardiovascular**, **respiratory**
+and **renal disease** mortality (nationally)*.
+
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+### Rationale
+
+::: {.incremental}
+1. We have pretty good evidence that more people die when it's really hot or really cold outside.
+1. These deaths are not (just) due to exposure, but the exacerbation of underlying chronic conditions.
+1. While the associations are well-documented, the causal pathways linking extreme outdoor temperature to chronic disease mortality remain unclear.
+:::
+
+:::
+:::
+::::
+
+::: {.fragment}
+One thing that likely affects this relationship is the **indoor environment and housing quality.** Temperature controls (or lack thereof) will influence the actual temperature exposure a person experiences. This is especially true because the population most vulnerable to hot and cold (people aged 65 or over) spends most of their time indoors.
+:::
+
+## 
+
+
+:::: {.columns}
+::: {.column width="50%"}
+#### But we quickly ran into a (pretty big) problem...
+::: {.fragment}
+> No good observational data on indoor temperature and housing exist at the longitudinal and geographic scales needed to achieve our study aims.
+:::
+:::
+
+::: {.column width="50%"}
+::: {.incremental}
+- Basic housing information is available from the Census **Public Use Microdata Sample (PUMS)** of the American Community Survey
+- Much more detailed information from the **Residential Energy Consumption Survey (RECS)**, but RECS is only representative at coarse geographies (census regions or states depending on the survey year).
+:::
+:::
+::::
+
+## Introducing the National Laboratory of the Rockies (NLR) ResStock Model
+
+::: {.incremental}
+- ResStock is [described](https://natlabrockies.github.io/ResStock.github.io/) as a "highly granular, bottom-up model that uses multiple data sources, statistical sampling methods, and advanced building energy simulations" to provide data on energy use in residential building stock across the United States."
+- In practice, the model produces 550,000 synthetic housing simulations (each representing roughly 254 homes) drawn from conditional probability distributions to represent residential housing stock as of 2019.
+- For each synthetic unit, energy use endpoints and the indoor environment are simulated at 15-minute time scales for a single simulation year (2018).
+::: 
+
+## What goes into a building simulation? {.smaller}
+
+```{r}
+#| echo: false
+#| fig-cap: '*NLR ResStock 2025.1: Delaware & Philadelphia prototypes used in temperature simulations. Simulation inputs come from 3 broad categories: 1) **Weather stations** assigned to county; 2) **Physical building characteristics**; 3) **Occupant information and behaviors***'
+
+bldg_char_table
+```
+
+## How do they overcome the key data limitation? 
+
+
+
+<style>
+.small-caption figcaption { font-size: 16px; line-height: 1.2; }
+</style>
+
+::: {.small-caption}
+![*Adapted from the ResStock [Technical Documentation](https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/2025/resstock_amy2018_release_1/ResStockTechnicalReferenceGuide_2025_1.pdf). Housing characteristics are assigned by "dependent sampling chains": each is drawn from nested conditional probability distributions built from national survey data (ACS PUMS, RECS, AHS, ATUS) plus a few more granular sources. Users supply a quota, and housing units are sampled from most to least common.*](dep_sampling_diagram.png)
+:::
+
+
+
+
+## Goal 1 | Explore the dataset's utility for health-related questions
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-cap: !expr glue("*ResStock 2025.1 AMY2018, upgrade 0, occupied units. Zone 4A spans states like New York, Virginia, Tennessee and North Carolina.*")
+#| fig-width: 12
+#| fig-height: 6.5
+#| out-width: "100%"
+
+# tsp_theme hides legends; the season ramp needs one to be readable
+mh_hi_plot +
+  tsp_theme +
+  theme(legend.position = "top")
+```
+
+## Goal 2 | Reproduce simulations from 2010–2022 and join with the UHC's Pennsylvania Mortality Data
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-cap: !expr glue("*ResStock 2025.1 AMY2018, upgrade 0, occupied units in Philadelphia. Outdoor weather sources from Philadelphia Airport 2018 & 20 year long term normals.*")
+#| fig-width: 12
+#| fig-height: 6.5
+#| out-width: "100%"
+
+# Legend kept on: the season ramp and the two outdoor line types need a key
+philly_hi_plot +
+  tsp_theme +
+  theme(legend.position = "top")
+```
+
+## Takeaways
+
+::: {.incremental}
+1. These data are super cool, but they are simplifications designed specifically for energy consumption end points. Indoor environmental estimates are derived as a secondary consequence, and can be limited in some key ways.
+2. Some information is better than no information, especially when it's derived in a tractable way that can be used to estimate uncertainty. 
+3. Seems to me that we still need better observed data on housing and in the indoor environment. 
+:::
+
+## 
+
+Thanks for listening!! 🙏
