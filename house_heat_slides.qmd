@@ -147,24 +147,7 @@ bldg_char_table
 
 
 
-## Goal 1 | Explore the dataset's utility for health-related questions
-
-```{r}
-#| echo: false
-#| warning: false
-#| message: false
-#| fig-cap: !expr glue("*ResStock 2025.1 AMY2018, upgrade 0, occupied units. Zone 4A spans states like New York, Virginia, Tennessee and North Carolina.*")
-#| fig-width: 12
-#| fig-height: 6.5
-#| out-width: "100%"
-
-# tsp_theme hides legends; the season ramp needs one to be readable
-mh_hi_plot +
-  tsp_theme +
-  theme(legend.position = "top")
-```
-
-## Goal 2 | Reproduce simulations from 2010–2022 and join with the UHC's Pennsylvania Mortality Data
+##
 
 ```{r}
 #| echo: false
